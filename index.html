@@ -1,172 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Free URL Shortener</title>
   <style>
-    body {
-      background: linear-gradient(135deg, #1a1a1a 0%, #4b0082 100%);
-      color: #fff;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 30px;
-      text-align: center;
-      position: relative;
-      overflow: hidden; /* Keeps emojis inside */
-    }
-    .overlay {
-      position: relative;
-      z-index: 2; /* Above emojis */
-      background: rgba(0, 0, 0, 0.4);
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 700px;
-      margin: 0 auto;
-    }
-    h1 {
-      color: #ff007a;
-      text-shadow: 0 0 15px #ff007a;
-      font-size: 4.5em;
-      margin: 0;
-    }
-    .tagline {
-      font-size: 1.5em;
-      color: #fff;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 5px 15px;
-      border-radius: 5px;
-      display: inline-block;
-    }
-    #teaser {
-      color: #00b4ff;
-      text-shadow: 0 0 10px #00b4ff;
-      font-size: 2em;
-      margin: 30px 0;
-    }
-    .hook {
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px 20px;
-      border-radius: 5px;
-      font-size: 1.2em;
-    }
-    .btn {
-      padding: 20px 40px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-      display: block;
-      margin: 20px auto;
-      box-shadow: 0 0 25px #ff007a;
-      animation: pulse 1.2s infinite;
-      transition: all 0.3s ease;
-      width: 220px;
-    }
-    .ad-btn {
-      background: #ff007a;
-      color: #fff;
-    }
-    .vid-btn {
-      background: #00b4ff;
-      color: #fff;
-    }
-    .btn:hover {
-      transform: scale(1.2);
-      box-shadow: 0 0 35px #ff007a;
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
-    #load-bar {
-      width: 300px;
-      background: #333;
-      height: 10px;
-      margin: 30px auto;
-      border-radius: 5px;
-    }
-    #load {
-      width: 0;
-      background: #ff007a;
-      height: 100%;
-      border-radius: 5px;
-      transition: width 5s;
-    }
-    #clicks {
-      color: #ccc;
-      font-size: 1em;
-      text-shadow: 0 0 5px #ccc;
-    }
-    .emoji {
-      position: absolute;
-      font-size: 1.5em;
-      opacity: 0.6;
-      z-index: 1; /* Behind content */
-      animation: float 10s infinite linear;
-    }
-    @keyframes float {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(var(--x-end), var(--y-end)); }
-    }
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+    input, button { padding: 10px; font-size: 16px; }
+    input { width: 70%; }
+    button { width: 25%; cursor: pointer; }
+    #result { margin-top: 20px; padding: 10px; background: #f0f0f0; }
   </style>
 </head>
 <body>
-  <div class="overlay">
-    <h1>Unlock the Heat</h1>
-    <div class="tagline">That tease was just the start—get the full rush.</div>
-    
-    <h2 id="teaser"></h2>
-    <div class="hook">Ready for more? Choose your thrill.</div>
-    
-    <a href="[ADSTERRA_DIRECT_LINK]" class="btn ad-btn">More Hot Stuff</a>
-    <a href="[FULL_VIDEO_LINK]" class="btn vid-btn">Full Video Now</a>
-    
-    <div id="load-bar"><div id="load"></div></div>
-    <p id="clicks">Clicked today: 44</p>
-  </div>
-  
+  <h1>🔗 Free URL Shortener</h1>
+  <input type="url" id="urlInput" placeholder="https://example.com">
+  <button onclick="shortenUrl()">Shorten</button>
+  <div id="result"></div>
+
   <script>
-    // Random Teaser Text
-    const teasers = [
-      "79% swear by this move after dark",
-      "This trend’s heating up 2025",
-      "One trick you’ll wish you knew sooner",
-      "Steamy stats: 68% can’t resist this",
-      "This vibe’s too hot to miss"
-    ];
-    document.getElementById("teaser").innerHTML = teasers[Math.floor(Math.random() * teasers.length)];
-    
-    // Loading Bar
-    setTimeout(() => { document.getElementById("load").style.width = "100%"; }, 100);
-    
-    // Click Counter
-    let clicks = localStorage.getItem('clickCount');
-    if (!clicks) {
-      clicks = 44; // Start at 44
-    } else {
-      clicks = parseInt(clicks) + 1; // Increase by 1 each refresh
+    async function shortenUrl() {
+      const url = document.getElementById('urlInput').value;
+      if (!url) return alert("Please enter a URL!");
+      
+      const response = await fetch('/api/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        document.getElementById('result').innerHTML = `
+          <p>Short URL: <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a></p>
+        `;
+      } else {
+        document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+      }
     }
-    localStorage.setItem('clickCount', clicks);
-    document.getElementById("clicks").innerHTML = `Clicked today: ${clicks}`;
-    
-    // Naughty Emojis
-    const emojis = ['💋', '😈', '🔥', '🍑', '😉', '💦', '👄', '🌶️'];
-    function createEmoji() {
-      const emoji = document.createElement('div');
-      emoji.className = 'emoji';
-      emoji.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-      const startX = Math.random() * window.innerWidth;
-      const startY = Math.random() * window.innerHeight;
-      const endX = (Math.random() - 0.5) * window.innerWidth * 2;
-      const endY = (Math.random() - 0.5) * window.innerHeight * 2;
-      emoji.style.left = `${startX}px`;
-      emoji.style.top = `${startY}px`;
-      emoji.style.setProperty('--x-end', `${endX}px`);
-      emoji.style.setProperty('--y-end', `${endY}px`);
-      document.body.appendChild(emoji);
-      setTimeout(() => emoji.remove(), 10000); // Remove after 10s
-    }
-    for (let i = 0; i < 15; i++) {
-      setTimeout(createEmoji, i * 500); // Staggered spawn
-    }
-    setInterval(createEmoji, 1000); // New emoji every second
   </script>
 </body>
 </html>
